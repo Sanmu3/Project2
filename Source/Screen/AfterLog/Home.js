@@ -1,9 +1,106 @@
 import React, {Component} from 'react';
-import {Image, Text, TouchableOpacity, View} from 'react-native';
+import {
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+  ScrollView,
+  RefreshControl,
+} from 'react-native';
 import {styles} from '../../Style/AfterLog/HomeStyle';
+import AsyncStorage from '@react-native-community/async-storage';
+import {connect} from 'react-redux';
 
-export default class Home extends Component {
+class Home extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isLoading: false,
+      dataSource: [],
+      token: '',
+      refresh: false,
+      saldo: '',
+    };
+  }
+  getToken() {
+    AsyncStorage.getItem('token').then((token) => {
+      if (token !== null) {
+        this.setState({token: token});
+        this.getProfile();
+      } else {
+        this.logOut();
+      }
+    });
+    //setelah token muncul maka ambil data Profile
+  }
+
+  getProfile() {
+    this.setState({isLoading: true});
+    fetch('https://qualcoom.herokuapp.com/api/profile', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${this.state.token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        console.log(responseJson);
+        this.setState({
+          isLoading: false,
+          dataSource: responseJson.data,
+          saldo: responseJson.tabungan.saldo,
+          refresh: false,
+        });
+      })
+
+      .catch((error) => {
+        console.log('error', error);
+      });
+  }
+
+  componentDidMount() {
+    this.getToken();
+  }
+
+  logOut() {
+    fetch('https://qualcoom.herokuapp.com/api/auth/logout', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.state.token}`,
+        Accept: 'application/json',
+      },
+    })
+      .then((response) => response.json())
+      //If response is in json then in success
+      .then((responseJson) => {
+        console.log(responseJson);
+        const {status} = responseJson;
+        if (status == 'success') {
+          AsyncStorage.clear();
+          this.props.navigation.navigate('Login');
+          this.userLogin(null);
+        } else {
+          console.log('error');
+          AsyncStorage.clear();
+          this.props.navigation.navigate('Login');
+          this.userLogin(null);
+        }
+      })
+      //If response is not in json then in error
+      .catch((error) => {
+        console.log('token', error);
+      });
+  }
+  handleRefresh() {
+    this.setState({refresh: true});
+    this.getToken();
+  }
+
+  imageDefault =
+    'https://moonvillageassociation.org/wp-content/uploads/2018/06/default-profile-picture1.jpg';
+
   render() {
+    console.log(this.state.saldo);
     return (
       <View style={styles.screen}>
         <View style={styles.headGroup}>
@@ -13,67 +110,77 @@ export default class Home extends Component {
               source={require('../../Pic/logo/logo.png')}
             />
           </View>
-          <TouchableOpacity style={styles.headPicBack}>
+          <TouchableOpacity
+            onPress={() => this.props.navigation.navigate('Kontak')}
+            style={styles.headPicBack}>
             <Image
               style={styles.headPic}
               source={require('../../Pic/main/chat.png')}
             />
           </TouchableOpacity>
         </View>
-        <View style={styles.mainHeader}>
-          <Text style={styles.mainHeaderText}>Saldo</Text>
-          <Text style={styles.mainHeaderText}>Rp. 20.000</Text>
-        </View>
-        <View style={styles.main}>
-          <View style={styles.mainitem}>
-            <TouchableOpacity style={styles.itemMainitem}>
-              <Image
-                style={styles.mainPic}
-                source={require('../../Pic/main/atm.png')}
-              />
-              <Text style={styles.mainText}>Tarik Sis</Text>
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refresh}
+              onRefresh={() => this.handleRefresh()}
+            />
+          }>
+          <View style={styles.mainHeader}>
+            <Image
+              style={styles.fotoProfile}
+              source={{
+                uri:
+                  this.state.dataSource.image == null
+                    ? this.imageDefault
+                    : this.state.dataSource.image,
+              }}
+            />
+            <View>
+              <Text style={styles.mainHeaderText}>Hi,</Text>
+              <Text style={styles.mainHeaderText}>
+                {this.state.dataSource.name}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.main}>
+            <Text style={styles.mainText}>Saldo anda</Text>
+            <Text style={styles.mainText}>Rp. {this.state.saldo}</Text>
+          </View>
+
+          <View style={styles.mainBottom}>
+            <TouchableOpacity
+              onPress={() => this.props.navigation.navigate('Jemput')}
+              style={styles.bottomItem}>
+              <View style={styles.itemBottomItem}>
+                <Image
+                  style={styles.bottomPic}
+                  source={require('../../Pic/main/pick-up-car.png')}
+                />
+              </View>
+              <Text style={styles.bottomText}>Jemput Sampah</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.itemMainitem}>
-              <Image
-                style={styles.mainPic}
-                source={require('../../Pic/main/badge.png')}
-              />
-              <Text style={styles.mainText}>70 Point</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.itemMainitem}>
-              <Image
-                style={styles.mainPic}
-                source={require('../../Pic/main/scale.png')}
-              />
-              <Text style={styles.mainText}>49 kg</Text>
+            <TouchableOpacity style={styles.bottomItem}>
+              <View style={styles.itemBottomItem}>
+                <Image
+                  style={styles.bottomPic}
+                  source={require('../../Pic/main/walk.png')}
+                />
+              </View>
+              <Text style={styles.bottomText}>Setor Langsung</Text>
             </TouchableOpacity>
           </View>
-        </View>
-
-        <View style={styles.mainBottom}>
-          <TouchableOpacity style={styles.bottomItem}>
-            <View style={styles.itemBottomItem}>
-              <Image
-                style={styles.bottomPic}
-                source={require('../../Pic/main/pick-up-car.png')}
-              />
-            </View>
-            <Text style={styles.bottomText}>Jemput Sampah</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.bottomItem}>
-            <View style={styles.itemBottomItem}>
-              <Image
-                style={styles.bottomPic}
-                source={require('../../Pic/main/walk.png')}
-              />
-            </View>
-            <Text style={styles.bottomText}>Setor Langsung</Text>
-          </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     );
   }
 }
+
+const mapStateToProps = (state) => {
+  return {
+    userToken: state.userReducer,
+  };
+};
+
+export default connect(mapStateToProps)(Home);

@@ -1,5 +1,4 @@
 import React from 'react';
-import {View, Text} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -9,9 +8,38 @@ import LupaPassword from '../auth/LupaPassword';
 import Home from '../AfterLog/Home';
 import Profile from '../AfterLog/Profile';
 import Jemput from '../Nasabah/Jemput';
+import EditProfile from '../AfterLog/EditProfile';
+import Chat from '../Nasabah/Chat';
+import KontakPengurus from '../Nasabah/KontakPengurus';
+import Pengurus1 from '../Pengurus1/Pengurus1';
+import DataNasabah from '../Pengurus1/DataNasabah';
+import {connect} from 'react-redux';
+import Setoran from '../Pengurus1/Setoran';
+import {ProfilePengurus} from '../Pengurus1/ProfilePengurus';
+import Pengurus2 from '../Pengurus2/Pengurus2';
+import Penjualan from '../Pengurus2/Penjualan';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const PengurusDua = () => {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="HomePengurus2" component={Pengurus2} />
+      <Tab.Screen name="Profile" component={ProfilePengurus} />
+    </Tab.Navigator>
+  );
+};
+
+const PengurusSatu = () => {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="HomePengurus1" component={Pengurus1} />
+      <Tab.Screen name="DataNasabah" component={DataNasabah} />
+      <Tab.Screen name="Profile" component={ProfilePengurus} />
+    </Tab.Navigator>
+  );
+};
 
 const Nasabah = () => {
   return (
@@ -46,9 +74,55 @@ const Navigation = () => {
           component={Nasabah}
           options={{headerShown: false}}
         />
-        <Stack.Screen name="Jemput" component={Jemput} />
+        <Stack.Screen
+          name="PengurusSatu"
+          component={PengurusSatu}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="PengurusDua"
+          component={PengurusDua}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Edit"
+          component={EditProfile}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Jemput"
+          component={Jemput}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Chat"
+          component={Chat}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Kontak"
+          component={KontakPengurus}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Setoran"
+          component={Setoran}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Penjualan"
+          component={Penjualan}
+          options={{headerShown: false}}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
-export default Navigation;
+
+const mapStateToProps = (state) => {
+  return {
+    userToken: state.userReducer,
+  };
+};
+
+export default connect(mapStateToProps)(Navigation);

@@ -5,6 +5,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f0f0f0',
   },
+  scroll: {},
   headGroup: {
     flexDirection: 'row',
     height: '10%',
@@ -35,7 +36,7 @@ export const styles = StyleSheet.create({
   profile: {
     alignSelf: 'center',
     width: '90%',
-    height: '60%',
+    height: 500,
     marginTop: 50,
     alignItems: 'center',
   },
@@ -51,7 +52,7 @@ export const styles = StyleSheet.create({
     marginTop: 65,
     backgroundColor: '#fff',
     width: '100%',
-    height: '90%',
+    height: '80%',
     borderRadius: 50,
     alignItems: 'center',
   },

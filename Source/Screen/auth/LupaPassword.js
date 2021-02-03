@@ -37,7 +37,11 @@ export default class LupaPassword extends Component {
               <Text style={styles.textButton}>kirim</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.text2}>Kembali</Text>
+          <Text
+            onPress={() => this.props.navigation.goBack()}
+            style={styles.text2}>
+            Kembali
+          </Text>
         </View>
       </View>
     );

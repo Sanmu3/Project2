@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 import {styles} from '../../Style/auth/LoginStyle';
 import AsyncStorage from '@react-native-community/async-storage';
+import {connect} from 'react-redux';
 
-export default class Login extends Component {
+class Login extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -21,22 +22,43 @@ export default class Login extends Component {
       secureTextEntry: true,
       token: '',
     };
-    console.log('ini token', this.state.token);
-    AsyncStorage.getItem('token').then((value) => {
-      console.log(value);
-      if (value !== null) {
-        this.props.navigation.navigate('Nasabah', {screen: 'Home'});
+  }
+  getToken() {
+    AsyncStorage.getItem('token').then((token) => {
+      if (token != null) {
+        AsyncStorage.getItem('role').then((role) => {
+          if (role == 'nasabah') {
+            console.log('nasabah', role, token);
+            this.props.navigation.navigate('Nasabah', {screen: 'Home'});
+          } else if (role == 'pengurus1') {
+            console.log(role);
+            this.props.navigation.navigate('PengurusSatu', {
+              screen: 'HomePengurus1',
+            });
+          } else {
+            console.log(role);
+            this.props.navigation.navigate('PengurusDua', {
+              screen: 'HomePengurus2',
+            });
+          }
+        });
       } else {
-        this.props.navigation.navigate('Login');
+        console.log('no token');
+        this.props.navigation.navigate('Splash');
       }
     });
   }
-
+  componentDidMount() {
+    this.getToken();
+  }
   mengambilUser = () => {
     this.setState({isLoading: true}),
       fetch('https://qualcoom.herokuapp.com/api/profile', {
         method: 'GET',
-        Authorization: `Bearer ${this.state.token}`,
+        headers: {
+          Authorization: `Bearer ${this.state.token}`,
+          Accept: 'application/json',
+        },
       })
         .then((response) => response.json())
         .then((responseJson) => {
@@ -48,11 +70,7 @@ export default class Login extends Component {
         });
   };
 
-  componentDidMount() {
-    this.mengambilUser();
-  }
-
-  Login = () => {
+  Masuk = () => {
     const {email, password} = this.state;
 
     var dataToSend = {email: email, password: password};
@@ -80,18 +98,46 @@ export default class Login extends Component {
         .then((responseJson) => {
           console.log(responseJson);
           const {token} = responseJson;
-          if (token) {
-            this.setState({isLoading: false}),
+          const {role} = responseJson.user;
+          if (token && role == 'nasabah') {
+            this.setState({isLoading: false, token: token}),
               AsyncStorage.setItem('token', token);
+            AsyncStorage.setItem('role', role.toString());
             this.props.navigation.navigate('Nasabah', {screen: 'Home'});
+            this.props.userLogin(token);
+            this.props.userRole(role);
+          }
+          if (token && role == 'pengurus1') {
+            this.setState({isLoading: false, token: token}),
+              AsyncStorage.setItem('token', token);
+            AsyncStorage.setItem('role', role.toString());
+            this.props.navigation.navigate('PengurusSatu', {
+              screen: 'HomePengurus1',
+            });
+            this.props.userLogin(token);
+            this.props.userRole(role);
+          }
+          if (token && role == 'pengurus2') {
+            this.setState({isLoading: false, token: token}),
+              AsyncStorage.setItem('token', token);
+            AsyncStorage.setItem('role', role.toString());
+            this.props.navigation.navigate('PengurusDua', {
+              screen: 'HomePengurus2',
+            });
+            this.props.userLogin(token);
+            this.props.userRole(role);
           } else {
             this.setState({isLoading: false}),
-              ToastAndroid('Email dan Password anda Salah', ToastAndroid.LONG);
+              ToastAndroid.show(
+                'Email dan Password anda Salah',
+                ToastAndroid.LONG,
+              );
           }
         })
         //If response is not in json then in error
         .catch((error) => {
-          alert('Email dan Password anda Salah');
+          ToastAndroid.show('Email dan Password anda Salah', ToastAndroid.LONG);
+          console.log(error);
         });
   };
   render() {
@@ -108,6 +154,7 @@ export default class Login extends Component {
             <View style={styles.input}>
               <TextInput
                 keyboardType="email-address"
+                style={{letterSpacing: 0.7}}
                 placeholder="Masukan Email"
                 onChangeText={(email) => this.setState({email})}
               />
@@ -117,7 +164,7 @@ export default class Login extends Component {
               <TextInput
                 secureTextEntry={this.state.secureTextEntry}
                 placeholder="Masukan Password"
-                style={{flex: 1}}
+                style={{flex: 1, letterSpacing: 0.7}}
                 onChangeText={(password) => this.setState({password})}
               />
               <TouchableOpacity
@@ -137,15 +184,24 @@ export default class Login extends Component {
                 )}
               </TouchableOpacity>
             </View>
-            <Text style={styles.forgotpass}>Lupa Password?</Text>
+            <Text
+              onPress={() => this.props.navigation.navigate('LupaPassword')}
+              style={styles.forgotpass}>
+              Lupa Password?
+            </Text>
             <TouchableOpacity
-              onPress={() => this.Login()}
+              onPress={() => this.Masuk()}
               style={styles.button}>
               <Text style={styles.textButton}>Masuk</Text>
             </TouchableOpacity>
           </View>
           <Text style={styles.text2}>
-            Belum Punya akun ?<Text style={{fontWeight: 'bold'}}> Daftar </Text>
+            Belum Punya akun ?
+            <Text
+              onPress={() => this.props.navigation.navigate('Daftar')}
+              style={{fontWeight: 'bold'}}>
+              {''} Daftar {''}
+            </Text>
             sekarang
           </Text>
         </View>
@@ -153,3 +209,17 @@ export default class Login extends Component {
     );
   }
 }
+
+const mapStateToProps = (state) => {
+  return {
+    userToken: state.userReducer,
+  };
+};
+const mapDispatchToProps = (dispatch) => {
+  return {
+    userLogin: (token) => dispatch({type: 'SET_USER', payload: token}),
+    userRole: (role) => dispatch({type: 'SET_ROLE', payload: role}),
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Login);

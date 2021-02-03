@@ -33,6 +33,7 @@ export const styles = StyleSheet.create({
   },
   foto: {
     margin: 50,
+    marginBottom: 20,
     width: 150,
     height: 150,
     borderRadius: 100,
@@ -53,12 +54,22 @@ export const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  image: {
-    borderWidth: 3,
-    borderColor: '#fff',
-    width: 200,
-    height: 200,
-    marginTop: 20,
-    borderRadius: 15,
+  Name: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    margin: 20,
+  },
+  nomor: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    margin: 20,
+  },
+  alamat: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    margin: 20,
   },
 });
